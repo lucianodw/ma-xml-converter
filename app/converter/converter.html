@@ -1,0 +1,134 @@
+<!-- <div ng-include="'components/navbar/navbar.html'"></div> -->
+
+<section class="hero-unit" id="banner">
+    <header class="container logo">
+        <div class="row animated bounceInDown">
+            <h1>XML</h1>
+            <span>converter</span>
+            <small>A Merchant Advocate Tool</small>
+        </div>
+    </header>
+
+    <div class="container animated zoomIn">
+        <div class="row center">
+           <div class="btn btn-info btn-lg" ng-click='init()'>New XML Conversion</div>
+      </div>
+    </div>
+
+    <div class="container ng-cloak animated bounceIn"  ng-show="load.flag">
+        <div class="row center">
+            <div class="results col-xs-12 col-sm-6 col-sm-offset-3">
+                <div class="progress progress-striped active">
+                 <div class="progress-bar progress-bar-warning"  role="progressbar" aria-valuenow="{{load.percent}}" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                 </div>
+               </div>
+               <p>{{load.msg}}</p>  
+            </div>
+      </div>
+    </div>
+
+    <div class="container ng-cloak "  ng-show="xml">
+          <div class="row">
+            <div class="results col-xs-12 col-sm-6 col-sm-offset-3">
+                <div>
+                    <div class="complete animated pulse">
+                        <i class="fa fa-check"></i>
+                    </div>
+                    <p>Conversion Complete</p>
+                </div>
+
+                <div class="file-statistics clearfix">
+                     <div class="file-panel">
+                        <p>{{xml.fileName}}</p>
+                     </div>
+                     <div class="file-panel">
+                        File Path: {{xml.files.csv.path}}
+                        <!-- <div ng-show="xml.files.csv.path">
+                            <a href="{{xml.files.csv.path}}" class="btn btn-warning btn-lg">Download CSV</a>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+          </div>
+    </div>
+
+    <div class="container ng-cloak animated ng-class: {'fadeOutDown': !optionsFlag}"  ng-show="optionsFlag">
+          <div class="row">
+            <div class="results col-xs-12 col-sm-8 col-sm-offset-2">
+                <div>
+                    <h4>Query Options</h4>
+                </div>
+                
+                <div class="query-section">
+                    <h4>Account Details</h4>
+                    <div class="query-section-options">
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ad['MAILING_NAME']">Company Name</label>
+                        <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ad['PROCESSING_MONTH']">Date</label>
+                        <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ad['MERCHANT_NUM']">Merchant ID</label> 
+                        <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ad['AD_AMOUNT_DEDUCTED']">Amount Deducted</label> 
+                    </div>
+                </div>
+                
+                <div class="query-section">
+                    <h4>Payment Summary</h4>
+                    <div class="query-section-options">
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['VS']">VS</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['VD']">VD</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['VB']">VB</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['V$']">V$</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['VL']">VL</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['MC']">MC</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['MD']">MD</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['MB']">MB</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['M$']">M$</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['ML']">ML</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['NB']">NB</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['DS']">DS</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['DD']">DD</label><br/>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['DZ']">DZ</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['D$']">D$</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['DJ']">DJ</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['DB']">DB</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ps['EB']">EB</label>
+                    </div>
+                </div>
+                
+                <div class="query-section">
+                    <h4>Payment Summary Totals</h4>
+                    <div class="query-section-options">
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.pst['PLAN_CODE']">Plan Code</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.pst['NUM_SALES']"># Sales</label>
+                        <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.pst['DOLLAR_SALES']">$ Sales</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.pst['NUM_CREDITS']"># Credit</label>
+                        <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.pst['DOLLAR_CREDITS']">$ Credit</label>
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.pst['NET_SALES']">Net Sales</label>
+                        <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.pst['AVG_TKT']">Average Ticket</label><br/>
+                        <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.pst['DISCOUNT_DUE']">Discount Due</label>
+                    </div>
+                </div>
+                
+                <div class="query-section">
+                    <h4>Fees</h4>
+                    <div class="query-section-options">
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees['TOTAL_FEES_DUE']">Fees Total</label>
+                    </div>
+                </div>
+                
+                <div class="query-section">
+                    <h4>Account Totals</h4>
+                    <div class="query-section-options">
+                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ts['DISC_DUE']">Discount Due</label>
+                        <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ts['FEES_DUE']">Fees Due</label>
+                        <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.ts['AMT_DEDUCTED']">Amount Deducted</label> 
+                    </div>
+                </div>
+
+                <div class="query-cta">
+                    <a href class="btn btn-warning btn-lg" ngf-select="upload($file)">Select File & Convert</a>
+                </div>
+            </div>
+          </div>
+    </div>
+
+</section>
+

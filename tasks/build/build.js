@@ -4,6 +4,7 @@ var pathUtil = require('path');
 var Q = require('q');
 var gulp = require('gulp');
 var less = require('gulp-less');
+var sass = require('gulp-sass');
 var watch = require('gulp-watch');
 var batch = require('gulp-batch');
 var plumber = require('gulp-plumber');
@@ -20,9 +21,13 @@ var destDir = projectDir.cwd('./build');
 var paths = {
     copyFromAppDir: [
         './node_modules/**',
+        './bower_components/**',
+        './converter/**',
+        './api/**',
         './helpers/**',
         './**/*.html',
-        './**/*.+(jpg|png|svg)'
+        './**/*.+(jpg|png|svg)',
+        'converter.js'
     ],
 };
 
@@ -77,6 +82,15 @@ var lessTask = function () {
 gulp.task('less', ['clean'], lessTask);
 gulp.task('less-watch', lessTask);
 
+var sassTask = function () {
+    return gulp.src('app/stylesheets/main.scss')
+        .pipe(plumber())
+        .pipe(sass())
+        .pipe(gulp.dest(destDir.path('stylesheets')));
+};
+gulp.task('sass', ['clean'], sassTask);
+gulp.task('sass-watch', sassTask);
+
 
 gulp.task('finalize', ['clean'], function () {
     var manifest = srcDir.read('package.json', 'json');
@@ -110,10 +124,10 @@ gulp.task('watch', function () {
     watch(paths.copyFromAppDir, { cwd: 'app' }, batch(function (events, done) {
         gulp.start('copy-watch', done);
     }));
-    watch('app/**/*.less', batch(function (events, done) {
-        gulp.start('less-watch', done);
+    watch('app/**/*.scss', batch(function (events, done) {
+        gulp.start('sass-watch', done);
     }));
 });
 
 
-gulp.task('build', ['bundle', 'less', 'copy', 'finalize']);
+gulp.task('build', ['bundle', 'sass', 'copy', 'finalize']);

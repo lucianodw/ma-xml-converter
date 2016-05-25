@@ -1,0 +1,19 @@
+{
+  "name": "xmlconverter",
+  "version": "0.0.0",
+  "dependencies": {
+    "angular": "^1.5.5",
+    "jquery": "^2.2.3",
+    "angular-bootstrap": "^1.3.2",
+    "angular-cookies": "^1.5.5",
+    "angular-resource": "^1.5.5",
+    "angular-sanitize": "^1.5.5",
+    "angular-ui-router": "^0.2.18",
+    "lodash": "^4.12.0",
+    "ng-file-upload": "^12.0.4",
+    "angular-file-upload": "^2.3.1",
+    "bootstrap-sass": "bootstrap-sass-official#^3.3.6",
+    "font-awesome": "^4.6.3"
+  },
+  "devDependencies": {}
+}

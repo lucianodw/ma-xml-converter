@@ -5,11 +5,10 @@
 import os from 'os'; // native node.js module
 import { remote } from 'electron'; // native electron module
 import jetpack from 'fs-jetpack'; // module loaded from npm
-import { greet } from './hello_world/hello_world'; // code authored by you in this project
 import env from './env';
 
-console.log('Loaded environment variables:', env);
 
+console.log('Loaded environment variables:', env);
 var app = remote.app;
 var appDir = jetpack.cwd(app.getAppPath());
 
@@ -18,7 +17,36 @@ var appDir = jetpack.cwd(app.getAppPath());
 console.log('The author of this app is:', appDir.read('package.json', 'json').author);
 
 document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('greet').innerHTML = greet();
-    document.getElementById('platform-info').innerHTML = os.platform();
-    document.getElementById('env-name').innerHTML = env.name;
+
 });
+
+
+// Angular Modules
+var angular = require('angular');
+require('angular-resource');
+require('angular-sanitize');
+require('angular-ui-router');
+require('angular-ui-bootstrap');
+require('ng-file-upload');
+
+angular.module('xml2JsonApp', [
+  'ngResource',
+  'ngSanitize',
+  'ui.router',
+  'ui.bootstrap',
+  'ngFileUpload'
+])
+.config(function ($stateProvider, $urlRouterProvider, $locationProvider) {
+
+$urlRouterProvider
+    .otherwise('/');
+      
+  $stateProvider
+    .state('converter', {
+      url: '/',
+      templateUrl: 'converter/converter.html',
+      controller: 'MainCtrl'
+    });
+});
+
+  require('./converter/converter.controller.js');

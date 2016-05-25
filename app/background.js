@@ -8,9 +8,13 @@ import { devMenuTemplate } from './helpers/dev_menu_template';
 import { editMenuTemplate } from './helpers/edit_menu_template';
 import createWindow from './helpers/window';
 
+const {dialog} = require('electron');
+
 // Special module holding environment variables which you declared
 // in config/env_xxx.json file.
 import env from './env';
+
+require('electron-debug')({showDevTools: true, enabled: true});
 
 var mainWindow;
 
@@ -22,6 +26,7 @@ var setApplicationMenu = function () {
     Menu.setApplicationMenu(Menu.buildFromTemplate(menus));
 };
 
+
 app.on('ready', function () {
     setApplicationMenu();
 
@@ -32,9 +37,9 @@ app.on('ready', function () {
 
     mainWindow.loadURL('file://' + __dirname + '/app.html');
 
-    if (env.name !== 'production') {
-        mainWindow.openDevTools();
-    }
+    // if (env.name !== 'production') {
+    //     mainWindow.openDevTools();
+    // }
 });
 
 app.on('window-all-closed', function () {
