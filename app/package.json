@@ -1,10 +1,10 @@
 {
-  "name": "electron-boilerplate",
-  "productName": "Electron Boilerplate",
-  "description": "Starter for your Electron application. Out of the box ready for serious stuff.",
+  "name": "xml-converter",
+  "productName": "XML Converter",
+  "description": "XML converter created for MerchantAdvocates. The tool will convert XML data into CSV files.",
   "version": "0.1.0",
-  "author": "Mr Gumby",
-  "copyright": "© 2016, your company here",
+  "author": "Luciano Diaz",
+  "copyright": "© 2016, DDW Enterprises",
   "main": "background.js",
   "dependencies": {
     "angular": "^1.5.5",
@@ -25,7 +25,7 @@
   "packageNameTemplate": "{{name}}-v{{version}}-{{platform}}-{{arch}}",
   "osx": {
     "build": "1",
-    "identifier": "com.example.electron-boilerplate",
+    "identifier": "com.example.xml-converter",
     "LSApplicationCategoryType": "public.app-category.productivity",
     "//codeSignIdentitiy": {
       "dmg": "Developer ID Application: Company Name (APPIDENTITY)",

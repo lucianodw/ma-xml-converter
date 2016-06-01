@@ -14,7 +14,7 @@ const {dialog} = require('electron');
 // in config/env_xxx.json file.
 import env from './env';
 
-require('electron-debug')({showDevTools: true, enabled: true});
+// require('electron-debug')({showDevTools: true, enabled: true});
 
 var mainWindow;
 
