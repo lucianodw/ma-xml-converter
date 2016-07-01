@@ -295,6 +295,7 @@ module.exports = {
                                 currentAbrv = convertFee(transType);
                                 if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
                                     filterObj['FEE_'+currentAbrv+'_'+counterIndex[currentAbrv]] = transaction.TOTAL[0];
+                                    console.log(transaction.TOTAL[0]);
                                     counterIndex[currentAbrv]++;
                                 }
 
@@ -308,7 +309,8 @@ module.exports = {
                     for(var i = 0; i < quantity; i++) {
                         var newIndex = i+1;
                         // console.log( filterObj['GFC'+'_'+newIndex]);
-                        if(! filterObj[key+'_'+newIndex]) {
+                        console.log(filterObj);
+                        if(! filterObj['FEE_'+key+'_'+newIndex]) {
                             filterObj['FEE_'+key+'_'+newIndex] = 0;
                         }
                     }
