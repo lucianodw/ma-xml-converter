@@ -59,15 +59,59 @@ module.exports = {
             // // ----- Filter JSON File -----
             function(callback){
                 console.log('Filter JSON!');
+                options.transactions_abr = convertFees(options.fees_transactions.slice());
+                console.log('option.fees_transactions ', options.fees_transactions);
+                console.log('option.transactions_abr ', options.transactions_abr);
+
+                _.forEach(jsonData, function(customer, index){
+                    var counter = {
+                        'GCF': 0,
+                        'FANF': 0,
+                        'MALF': 0,
+                        'VIF': 0,
+                        'AMXDIS': 0,
+                        'VSMCTF': 0,
+                        'AVSTF': 0,
+                        'DISCTF': 0,
+                        'AMEXTF': 0,
+                        'NABU': 0
+                    };
+
+                    var currentAbrv = '';
+                    _.forEach(customer.FEES_SECTION[0].FEE_TRAN, function(transaction, key){
+
+                        _.forEach(options.fees_transactions, function(transType) {
+                            currentAbrv = convertFee(transType);
+                            if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
+                                counter[currentAbrv]++;
+                            }
+
+                        });
+
+                    });
+
+                    _.forEach(maxCounter, function(quantity, key){
+                            if(quantity < counter[key]) {
+                                maxCounter[key] = counter[key];
+                            }
+                    });
+                });
+
+                console.log('max counter', maxCounter);
+
                 _.forEach(jsonData, function(customer, index){
                     var newCustomer = [];
                     var newObj = jsonFilter.accountDetails(customer);
                     _.merge(newObj, jsonFilter.planSummary(customer));
                     _.merge(newObj, jsonFilter.getFields(customer.FEES_SECTION[0].FEE_TOTALS[0], 'FEES'));
                     _.merge(newObj, jsonFilter.getFields(customer.TOTALS_BOX_SECTION[0], 'TS'));
-
+                    _.merge(newObj,  jsonFilter.fees(customer.FEES_SECTION));
+                    
                     jsonData[index] = newObj;
                 });
+
+
+                // console.log(jsonData);
 
                 callback();
             },
@@ -99,8 +143,6 @@ module.exports = {
             respObj.data = jsonData;
             respObj.records = jsonData.length;
             respObj.complete = true;
-            console.log('responseObj: ', respObj);
-            console.log('Complete');
             xmlObj = respObj;
             return respObj;
         });
@@ -109,6 +151,76 @@ module.exports = {
 
         };
 
+        var convertFees = function(fees) {
+            var newFees = fees;
+            _.each(fees, function(obj, index){
+                switch (obj) {
+                    case 'VISA INTEGRITY FEE':
+                        newFees[index] = 'VIF';
+                        break;
+                    case 'AMEX DISC':
+                        newFees[index] = 'AMXDIS';
+                        break;
+                    case 'VS MC TRANSACTION FEE':
+                        newFees[index] = 'VSMCTF'
+                        break;
+                    case 'AVS TRANSACTION FEE':
+                        newFees[index] = 'AVSTF'
+                        break;
+                    case 'DISCOVER TRANS FEE':
+                        newFees[index] = 'DISCTF'
+                        break;
+                    case 'AMEX TRANS FEE':
+                        newFees[index] = 'AMEXTF'
+                        break;
+                    default:
+                        newFees[index] = obj;
+                        break;
+                }
+            });
+
+            return newFees;
+        }
+        var convertFee = function(fee) {
+            switch (fee) {
+                case 'VISA INTEGRITY FEE':
+                    return fee = 'VIF';
+                    break;
+                case 'AMEX DISC':
+                    return fee = 'AMXDIS';
+                    break;
+                case 'VS MC TRANSACTION FEE':
+                    return fee = 'VSMCTF'
+                    break;
+                case 'AVS TRANSACTION FEE':
+                    return fee = 'AVSTF'
+                    break;
+                case 'DISCOVER TRANS FEE':
+                    return fee = 'DISCTF'
+                    break;
+                case 'AMEX TRANS FEE':
+                    return fee = 'AMEXTF'
+                    break;
+                default:
+                    return fee = fee;
+                    break;
+            }
+
+            return fee;
+        };
+
+        var maxCounter = {
+                        'GCF': 0,
+                        'FANF': 0,
+                        'MALF': 0,
+                        'VIF': 0,
+                        'AMXDIS': 0,
+                        'VSMCTF': 0,
+                        'AVSTF': 0,
+                        'DISCTF': 0,
+                        'AMEXTF': 0,
+                        'NABU': 0
+                    };
 
         var jsonFilter = {
             accountDetails: function(dataPoint) {
@@ -157,6 +269,56 @@ module.exports = {
                 });
 
                 return filterObj;
+            },
+            fees: function(data) {
+
+                var filterObj = {};
+                var topCounter = 1;
+                
+                _.forEach(data, function(obj, key) {
+                    var counterIndex = {
+                        'GCF': 1,
+                        'FANF': 1,
+                        'MALF': 1,
+                        'VIF': 1,
+                        'AMXDIS': 1,
+                        'VSMCTF': 1,
+                        'AVSTF': 1,
+                        'DISCTF': 1,
+                        'AMEXTF': 1,
+                        'NABU': 1
+                    };
+
+                    _.forEach(obj.FEE_TRAN, function(transaction, key) {
+                        var currentAbrv;
+                         _.forEach(options.fees_transactions, function(transType) {
+                                currentAbrv = convertFee(transType);
+                                if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
+                                    filterObj['FEE_'+currentAbrv+'_'+counterIndex[currentAbrv]] = transaction.TOTAL[0];
+                                    counterIndex[currentAbrv]++;
+                                }
+
+                            });
+
+                    });
+
+                });
+
+                _.forEach(maxCounter, function(quantity, key){
+                    for(var i = 0; i < quantity; i++) {
+                        var newIndex = i+1;
+                        // console.log( filterObj['GFC'+'_'+newIndex]);
+                        if(! filterObj[key+'_'+newIndex]) {
+                            filterObj['FEE_'+key+'_'+newIndex] = 0;
+                        }
+                    }
+                });
+
+               
+
+                // console.log(filterObj);
+                    return filterObj;
+
             }
         }
 

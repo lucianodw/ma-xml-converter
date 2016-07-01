@@ -12,6 +12,7 @@ angular.module('xml2JsonApp')
         $scope.load.flag = true;
         $scope.optionsFlag = false;
 
+        console.log('Old Options: ', $scope.options);
         var options = convert($scope.options);
         console.log('New Options: ', options);
 
@@ -84,7 +85,19 @@ $scope.init = function(){
             DISCOUNT_DUE : true
         },
         fees: {
-            TOTAL_FEES_DUE: false
+            TOTAL_FEES_DUE: false,
+            TRANSACTIONS: {
+                    'GCF': false,
+                    'FANF': false,
+                    'MALF': false,
+                    'VISA INTEGRITY FEE': false,
+                    'AMEX DISC': false,
+                    'VS MC TRANSACTION FEE': false,
+                    'AVS TRANSACTION FEE': false,
+                    'DISCOVER TRANS FEE': false,
+                    'AMEX TRANS FEE': false,
+                    'NABU' : true
+            }
         },
         ts: {
             DISC_DUE : false,
@@ -114,6 +127,23 @@ var convert = function(options) {
 
         optionObj[key] = optionArr;
     });
+
+    console.log(options.fees.TRANSACTIONS);
+    var transArr = [];
+
+    _.each(options.fees.TRANSACTIONS, function(obj, key){
+        console.log('obj', obj);
+        console.log('key', key);
+
+        if(obj) {
+            console.log('Obj True!');
+            transArr.push(key);
+        }
+    });
+
+            console.log('----');
+    console.log('transArr', transArr);
+    optionObj['fees_transactions'] = transArr;
 
     return optionObj;
 }
