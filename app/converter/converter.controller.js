@@ -12,11 +12,7 @@ angular.module('xml2JsonApp')
         $scope.load.flag = true;
         $scope.optionsFlag = false;
 
-        console.log('Old Options: ', $scope.options);
         var options = convert($scope.options);
-        console.log('New Options: ', options);
-
-        console.log('File Length: ', file);
 
         // Custom Node Function
         converter.init(file,options);
@@ -24,10 +20,14 @@ angular.module('xml2JsonApp')
         var checkStatus = $interval(function() {
             var xmlObj = converter.xmlObj();
             console.log(xmlObj);
-            if(xmlObj.complete) {
-                console.log('Ready to Download!')
-                $scope.xml = xmlObj;
+            if(xmlObj.upload) {
+                console.log('Ready to Pick Filters!');
+                $scope.jsonReady = true;
+                $scope.optionsFlag = true;
                 $scope.loadReset();
+                console.log('xmlObj.feeList: ', xmlObj.feeList);
+                $scope.xml = xmlObj;
+                console.log('scope.xml', $scope.xml);
                 $interval.cancel(checkStatus);
             }
         }, 3000);
@@ -37,7 +37,7 @@ angular.module('xml2JsonApp')
        $scope.load = {
         flag: false,
         percent: 1,
-        msg: "Converting XML to CSV..."
+        msg: "Uploading XML File..."
     }
 }
 
@@ -45,7 +45,8 @@ $scope.init = function(){
     console.log('init :: Function');
     $scope.xml = null;
     $scope.options = null;
-    $scope.optionsFlag = true;
+    $scope.optionsFlag = false;
+    $scope.jsonReady = false;
     $scope.loadReset();
     $scope.options = {
         ad: {
@@ -132,16 +133,12 @@ var convert = function(options) {
     var transArr = [];
 
     _.each(options.fees.TRANSACTIONS, function(obj, key){
-        console.log('obj', obj);
-        console.log('key', key);
 
         if(obj) {
-            console.log('Obj True!');
             transArr.push(key);
         }
     });
 
-            console.log('----');
     console.log('transArr', transArr);
     optionObj['fees_transactions'] = transArr;
 

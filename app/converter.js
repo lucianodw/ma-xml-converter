@@ -15,8 +15,9 @@ const {dialog} = require('electron');
 var xmlObj = {
         data: {},
         records: 0,
-        complete: false,
+        upload: false,
         fileName: '',
+        feeList: [],
         files: {
             csv: {
                 path: ''
@@ -47,7 +48,7 @@ module.exports = {
                 });         
             },
 
-            // // ----- Convert XML File (XML to JSON) -----
+            // ----- Convert XML File (XML to JSON) -----
             function(callback){
                 console.log('Convert XML File to JSON!');
                 xmlParser.parseString(xmlData, function (err, result) {
@@ -56,100 +57,29 @@ module.exports = {
                 });
             },
 
-            // // ----- Filter JSON File -----
             function(callback){
-                console.log('Filter JSON!');
-                options.transactions_abr = convertFees(options.fees_transactions.slice());
-                console.log('option.fees_transactions ', options.fees_transactions);
-                console.log('option.transactions_abr ', options.transactions_abr);
+                console.log('Get Fees Array!');
+                let feeArr = [];
 
                 _.forEach(jsonData, function(customer, index){
-                    var counter = {
-                        'GCF': 0,
-                        'FANF': 0,
-                        'MALF': 0,
-                        'VIF': 0,
-                        'AMXDIS': 0,
-                        'VSMCTF': 0,
-                        'AVSTF': 0,
-                        'DISCTF': 0,
-                        'AMEXTF': 0,
-                        'NABU': 0
-                    };
-
-                    var currentAbrv = '';
                     _.forEach(customer.FEES_SECTION[0].FEE_TRAN, function(transaction, key){
-
-                        _.forEach(options.fees_transactions, function(transType) {
-                            currentAbrv = convertFee(transType);
-                            if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
-                                counter[currentAbrv]++;
-                            }
-
-                        });
-
+                        console.log('transaction', transaction.DESCRIPTION[0]);
+                        feeArr.push(transaction.DESCRIPTION[0]);
                     });
+                });    
 
-                    _.forEach(maxCounter, function(quantity, key){
-                            if(quantity < counter[key]) {
-                                maxCounter[key] = counter[key];
-                            }
-                    });
-                });
-
-                console.log('max counter', maxCounter);
-
-                _.forEach(jsonData, function(customer, index){
-                    var newCustomer = [];
-                    var newObj = jsonFilter.accountDetails(customer);
-                    _.merge(newObj, jsonFilter.planSummary(customer));
-                    _.merge(newObj, jsonFilter.getFields(customer.FEES_SECTION[0].FEE_TOTALS[0], 'FEES'));
-                    _.merge(newObj, jsonFilter.getFields(customer.TOTALS_BOX_SECTION[0], 'TS'));
-                    _.merge(newObj,  jsonFilter.fees(customer.FEES_SECTION));
-                    
-                    jsonData[index] = newObj;
-                });
-
-
-                // console.log(jsonData);
-
+                console.log('feeArr Length', feeArr.length);
+                feeArr = _.uniq(feeArr);
+                respObj.feeList = feeArr;
+                console.log('feeArr Length', feeArr.length);
                 callback();
-            },
-
-            // // ----- Convert JSON File (JSON to CSV) -----
-            function(callback){
-                console.log('JSON to CSV!');
-                var outputKeys = [];
-                _.forEach(jsonData[0], function(dataPoint, key) {
-                    outputKeys.push(key);
-                });
-
-
-                json2csv({ data: jsonData, fields: outputKeys }, function(err, csv) {
-                    if (err) console.log(err);
-                    var path = dialog.showSaveDialog({title: 'Save Dialog Example'});
-                    path = (path.indexOf('.csv') === -1) ? (path + '.csv') : path;
-                    
-                    fs.writeFile(path, csv, function(err) {
-                        if (err) throw err;
-                        respObj.files.csv.path = path;
-                        callback();
-                    });
-                });
-            }
-
+            }  
         ], function() {
             // ----- Return Response to Client -----
-            respObj.data = jsonData;
-            respObj.records = jsonData.length;
-            respObj.complete = true;
-            xmlObj = respObj;
+            respObj.upload = true;
+            console.log('respObj.feeList: ', respObj.feeList);
             return respObj;
         });
-
-        var saveFile = function() {
-
-        };
 
         var convertFees = function(fees) {
             var newFees = fees;
@@ -309,7 +239,6 @@ module.exports = {
                     for(var i = 0; i < quantity; i++) {
                         var newIndex = i+1;
                         // console.log( filterObj['GFC'+'_'+newIndex]);
-                        console.log(filterObj);
                         if(! filterObj['FEE_'+key+'_'+newIndex]) {
                             filterObj['FEE_'+key+'_'+newIndex] = 0;
                         }
@@ -326,3 +255,88 @@ module.exports = {
 
     }
 };
+
+
+
+
+            // // // ----- Filter JSON File -----
+            // function(callback){
+            //     console.log('Filter JSON!');
+            //     options.transactions_abr = convertFees(options.fees_transactions.slice());
+            //     console.log('option.fees_transactions ', options.fees_transactions);
+            //     console.log('option.transactions_abr ', options.transactions_abr);
+
+            //     _.forEach(jsonData, function(customer, index){
+            //         var counter = {
+            //             'GCF': 0,
+            //             'FANF': 0,
+            //             'MALF': 0,
+            //             'VIF': 0,
+            //             'AMXDIS': 0,
+            //             'VSMCTF': 0,
+            //             'AVSTF': 0,
+            //             'DISCTF': 0,
+            //             'AMEXTF': 0,
+            //             'NABU': 0
+            //         };
+
+            //         var currentAbrv = '';
+            //         _.forEach(customer.FEES_SECTION[0].FEE_TRAN, function(transaction, key){
+
+            //             _.forEach(options.fees_transactions, function(transType) {
+            //                 currentAbrv = convertFee(transType);
+            //                 if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
+            //                     counter[currentAbrv]++;
+            //                 }
+
+            //             });
+
+            //         });
+
+            //         _.forEach(maxCounter, function(quantity, key){
+            //                 if(quantity < counter[key]) {
+            //                     maxCounter[key] = counter[key];
+            //                 }
+            //         });
+            //     });
+
+            //     console.log('max counter', maxCounter);
+
+            //     _.forEach(jsonData, function(customer, index){
+            //         var newCustomer = [];
+            //         var newObj = jsonFilter.accountDetails(customer);
+            //         _.merge(newObj, jsonFilter.planSummary(customer));
+            //         _.merge(newObj, jsonFilter.getFields(customer.FEES_SECTION[0].FEE_TOTALS[0], 'FEES'));
+            //         _.merge(newObj, jsonFilter.getFields(customer.TOTALS_BOX_SECTION[0], 'TS'));
+            //         _.merge(newObj,  jsonFilter.fees(customer.FEES_SECTION));
+                    
+            //         jsonData[index] = newObj;
+            //     });
+
+
+            //     // console.log(jsonData);
+
+            //     callback();
+            // },
+
+            // // // ----- Convert JSON File (JSON to CSV) -----
+            // function(callback){
+            //     console.log('JSON to CSV!');
+            //     var outputKeys = [];
+            //     _.forEach(jsonData[0], function(dataPoint, key) {
+            //         outputKeys.push(key);
+            //     });
+
+
+            //     json2csv({ data: jsonData, fields: outputKeys }, function(err, csv) {
+            //         if (err) console.log(err);
+            //         var path = dialog.showSaveDialog({title: 'Save Dialog Example'});
+            //         path = (path.indexOf('.csv') === -1) ? (path + '.csv') : path;
+                    
+            //         fs.writeFile(path, csv, function(err) {
+            //             if (err) throw err;
+            //             respObj.files.csv.path = path;
+            //             callback();
+            //         });
+            //     });
+            // }

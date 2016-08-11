@@ -11,7 +11,7 @@
 
     <div class="container animated zoomIn">
         <div class="row center">
-           <div class="btn btn-info btn-lg" ng-click='init()'>New XML Conversion</div>
+           <div class="btn btn-info btn-lg" ngf-select="upload($file)">New XML Conversion</div>
       </div>
     </div>
 
@@ -27,6 +27,19 @@
       </div>
     </div>
 
+    <div class="container ng-cloak "  ng-show="jsonReady">
+          <div class="row">
+            <div class="results col-xs-12 col-sm-6 col-sm-offset-3">
+                <div>
+                    <div class="complete animated pulse">
+                        <i class="fa fa-check"></i>
+                    </div>
+                    <p>File Upload Complete.</p>
+                </div>
+            </div>
+          </div>
+    </div>
+<!--
     <div class="container ng-cloak "  ng-show="xml">
           <div class="row">
             <div class="results col-xs-12 col-sm-6 col-sm-offset-3">
@@ -43,14 +56,11 @@
                      </div>
                      <div class="file-panel">
                         File Path: {{xml.files.csv.path}}
-                        <!-- <div ng-show="xml.files.csv.path">
-                            <a href="{{xml.files.csv.path}}" class="btn btn-warning btn-lg">Download CSV</a>
-                        </div> -->
                     </div>
                 </div>
             </div>
           </div>
-    </div>
+    </div>-->
 
     <div class="container ng-cloak animated ng-class: {'fadeOutDown': !optionsFlag}"  ng-show="optionsFlag">
           <div class="row">
@@ -110,17 +120,16 @@
                 <div class="query-section">
                     <h4>Fees</h4>
                     <div class="query-section-options">
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees['TOTAL_FEES_DUE']">Fees Total</label>
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees.TRANSACTIONS['GCF']">GCF</label>
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees.TRANSACTIONS['FANF']">FANF</label>
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees.TRANSACTIONS['MALF']">MALF</label>
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees.TRANSACTIONS['VISA INTEGRITY FEE']">VISA INTEGRITY FEE</label>
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees.TRANSACTIONS['AMEX DISC']">AMEX DISC</label>
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees.TRANSACTIONS['VS MC TRANSACTION FEE']">VS MC TRANSACTION FEE</label>
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees.TRANSACTIONS['AVS TRANSACTION FEE']">AVS TRANSACTION FEE</label>
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees.TRANSACTIONS['DISCOVER TRANS FEE']">DISCOVER TRANS FEE</label>
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees.TRANSACTIONS['AMEX TRANS FEE']">AMEX TRANS FEE</label>
-                         <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees.TRANSACTIONS['NABU']">NABU</label>
+                        <div>
+                            <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees['TOTAL_FEES_DUE']">Fees Total</label>
+                        </div>
+                        <hr>
+                        <div>
+                            <label for="feeType">Fee Type</label>
+                            <select class="fee-type " name="feeType">
+                                <option ng-repeat="feeType in xml.feeList" value="{{feeType}}">{{feeType}}</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 
