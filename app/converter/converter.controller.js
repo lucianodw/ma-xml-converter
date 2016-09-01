@@ -41,6 +41,35 @@ angular.module('xml2JsonApp')
     }
 }
 
+$scope.addFee = function() {
+    $scope.options.fees['TRANSACTIONS'].push(0);
+}
+
+$scope.removeFee = function(index) {
+   $scope.options.fees['TRANSACTIONS'].splice(index, 1)
+}
+
+$scope.filter = function() {
+        $scope.load.flag = true;
+        $scope.optionsFlag = false;
+        $scope.load.msg = 'Creating CSV File...';
+
+        var options = convert($scope.options);
+        converter.filter('test', options);
+
+        var checkStatus = $interval(function() {
+            var xmlObj = converter.xmlObj();
+            console.log(xmlObj);
+            if(xmlObj.csvReady) {
+                console.log('Ready to Pick Filters!');
+                $scope.csvReady = true;
+                $scope.optionsFlag = false;
+                $scope.loadReset();
+                $interval.cancel(checkStatus);
+            }
+        }, 1000);
+}
+
 $scope.init = function(){
     console.log('init :: Function');
     $scope.xml = null;
@@ -87,18 +116,7 @@ $scope.init = function(){
         },
         fees: {
             TOTAL_FEES_DUE: false,
-            TRANSACTIONS: {
-                    'GCF': false,
-                    'FANF': false,
-                    'MALF': false,
-                    'VISA INTEGRITY FEE': false,
-                    'AMEX DISC': false,
-                    'VS MC TRANSACTION FEE': false,
-                    'AVS TRANSACTION FEE': false,
-                    'DISCOVER TRANS FEE': false,
-                    'AMEX TRANS FEE': false,
-                    'NABU' : true
-            }
+            TRANSACTIONS: [0]
         },
         ts: {
             DISC_DUE : false,
@@ -129,18 +147,7 @@ var convert = function(options) {
         optionObj[key] = optionArr;
     });
 
-    console.log(options.fees.TRANSACTIONS);
-    var transArr = [];
-
-    _.each(options.fees.TRANSACTIONS, function(obj, key){
-
-        if(obj) {
-            transArr.push(key);
-        }
-    });
-
-    console.log('transArr', transArr);
-    optionObj['fees_transactions'] = transArr;
+    optionObj['fees_transactions'] = options.fees.TRANSACTIONS;
 
     return optionObj;
 }

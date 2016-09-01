@@ -16,6 +16,7 @@ var xmlObj = {
         data: {},
         records: 0,
         upload: false,
+        csvReady: false,
         fileName: '',
         feeList: [],
         files: {
@@ -24,6 +25,103 @@ var xmlObj = {
             }
         }
     };
+
+var jsonData;
+
+var maxCounter = {};
+
+var jsonFilter = {
+        accountDetails: function(dataPoint, options) {
+            var filterKeys = options.ad;
+            var filterObj = {};
+
+            _.forEach(dataPoint, function(obj, key) {
+                if(filterKeys.indexOf(key) > -1) {
+                    filterObj['AD_'+key] = obj[0];
+                }
+            });
+
+            return filterObj;
+        },
+        planSummary: function(dataPoint, options) {
+            var filterObj = {};
+
+            _.forEach(dataPoint.PLAN_SUMMARY[0].PLAN_SUMMARY_TRAN, function(obj, key) {
+                var filterKeys = options.ps;
+                var planCode = obj.PLAN_CODE[0];
+
+                if(filterKeys.indexOf(planCode) > -1) {
+                    _.forEach(obj, function(plan, key) {
+                        filterObj['PS_'+planCode+'_'+key] = plan[0];
+                    });
+                }
+            });
+
+            _.forEach(dataPoint.PLAN_SUMMARY[0].PLAN_SUMMARY_TOTALS[0], function(obj, key) {
+                var filterKeys = options.pst;
+                if(filterKeys.indexOf(key) > -1) {
+                    filterObj['PST_'+key] = obj[0];
+                }
+            });
+
+            return filterObj;
+        },
+        getFields: function(data, prefix, options){
+            var filterKeys = options[prefix.toLowerCase()];
+            var filterObj = {};
+
+            _.forEach(data, function(obj, key) {
+                if(filterKeys.indexOf(key) > -1) {
+                    filterObj[prefix+'_'+key] = obj[0];
+                }
+            });
+
+            return filterObj;
+        },
+        fees: function(data, options) {
+
+            var filterObj = {};
+            var topCounter = 1;
+            
+            _.forEach(data, function(obj, key) {
+                    var counterIndex = {};
+
+                    _.each(options.fees_transactions, function(property) {
+                        counterIndex[property] = 1;
+                    });
+                    console.log('counterIndeX: ',counterIndex);
+
+                _.forEach(obj.FEE_TRAN, function(transaction, key) {
+                     _.forEach(options.fees_transactions, function(transType) {
+                            if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
+                                var transTypeFormatted = transType.replace(/ /g, '');
+                                filterObj['FEE_'+transTypeFormatted+'_'+counterIndex[transType]] = transaction.TOTAL[0];
+                                console.log(transaction.TOTAL[0]);
+                                counterIndex[transType]++;
+                            }
+
+                        });
+
+                });
+
+            });
+
+            _.forEach(maxCounter, function(quantity, key){
+                for(var i = 0; i < quantity; i++) {
+                    var newIndex = i+1;
+                    var keyFormattted = key.replace(/ /g, '');
+                    // console.log( filterObj['GFC'+'_'+newIndex]);
+                    if(! filterObj['FEE_'+keyFormattted+'_'+newIndex]) {
+                        filterObj['FEE_'+keyFormattted+'_'+newIndex] = 0;
+                    }
+                }
+            });
+
+            // console.log(filterObj);
+            return filterObj;
+
+        }
+    }
 
 module.exports = {
     xmlObj: function() {
@@ -35,7 +133,7 @@ module.exports = {
         console.log('options', options);
 
         var fileName = file.name.replace('.xml', '');
-        var xmlData, jsonData;
+        var xmlData;
         var respObj = xmlObj;
 
         async.series([
@@ -70,7 +168,9 @@ module.exports = {
 
                 console.log('feeArr Length', feeArr.length);
                 feeArr = _.uniq(feeArr);
+                feeArr = _.sortBy(feeArr);
                 respObj.feeList = feeArr;
+                respObj.data = jsonData;
                 console.log('feeArr Length', feeArr.length);
                 callback();
             }  
@@ -78,265 +178,112 @@ module.exports = {
             // ----- Return Response to Client -----
             respObj.upload = true;
             console.log('respObj.feeList: ', respObj.feeList);
+
+            console.log('current json: ', jsonData.length);
             return respObj;
         });
+    },
+    filter: function(test, options) {
+        console.log('filter!');
+        console.log('test!', test);
+        console.log('options!', options);
+        console.log('old json: ', jsonData.length);
+        var respObj = xmlObj;
 
-        var convertFees = function(fees) {
-            var newFees = fees;
-            _.each(fees, function(obj, index){
-                switch (obj) {
-                    case 'VISA INTEGRITY FEE':
-                        newFees[index] = 'VIF';
-                        break;
-                    case 'AMEX DISC':
-                        newFees[index] = 'AMXDIS';
-                        break;
-                    case 'VS MC TRANSACTION FEE':
-                        newFees[index] = 'VSMCTF'
-                        break;
-                    case 'AVS TRANSACTION FEE':
-                        newFees[index] = 'AVSTF'
-                        break;
-                    case 'DISCOVER TRANS FEE':
-                        newFees[index] = 'DISCTF'
-                        break;
-                    case 'AMEX TRANS FEE':
-                        newFees[index] = 'AMEXTF'
-                        break;
-                    default:
-                        newFees[index] = obj;
-                        break;
-                }
-            });
+        async.series([
+            // // ----- Filter JSON File -----
+            function(callback){
+                console.log('Filter JSON!');
+                console.log('option.fees_transactions ', options.fees_transactions);
+                console.log('option.transactions_abr ', options.transactions_abr);
+                console.log('Create Counter');
 
-            return newFees;
-        }
-        var convertFee = function(fee) {
-            switch (fee) {
-                case 'VISA INTEGRITY FEE':
-                    return fee = 'VIF';
-                    break;
-                case 'AMEX DISC':
-                    return fee = 'AMXDIS';
-                    break;
-                case 'VS MC TRANSACTION FEE':
-                    return fee = 'VSMCTF'
-                    break;
-                case 'AVS TRANSACTION FEE':
-                    return fee = 'AVSTF'
-                    break;
-                case 'DISCOVER TRANS FEE':
-                    return fee = 'DISCTF'
-                    break;
-                case 'AMEX TRANS FEE':
-                    return fee = 'AMEXTF'
-                    break;
-                default:
-                    return fee = fee;
-                    break;
-            }
-
-            return fee;
-        };
-
-        var maxCounter = {
-                        'GCF': 0,
-                        'FANF': 0,
-                        'MALF': 0,
-                        'VIF': 0,
-                        'AMXDIS': 0,
-                        'VSMCTF': 0,
-                        'AVSTF': 0,
-                        'DISCTF': 0,
-                        'AMEXTF': 0,
-                        'NABU': 0
-                    };
-
-        var jsonFilter = {
-            accountDetails: function(dataPoint) {
-                var filterKeys = options.ad;
-                var filterObj = {};
-
-                _.forEach(dataPoint, function(obj, key) {
-                    if(filterKeys.indexOf(key) > -1) {
-                        filterObj['AD_'+key] = obj[0];
-                    }
+                _.each(options.fees_transactions, function(property) {
+                    maxCounter[property] = 0;
                 });
 
-                return filterObj;
-            },
-            planSummary: function(dataPoint) {
-                var filterObj = {};
+                _.forEach(jsonData, function(customer, index){
+                    console.log('Create Counter');
+                    var counter = {};
 
-                _.forEach(dataPoint.PLAN_SUMMARY[0].PLAN_SUMMARY_TRAN, function(obj, key) {
-                    var filterKeys = options.ps;
-                    var planCode = obj.PLAN_CODE[0];
+                    _.each(options.fees_transactions, function(property) {
+                        counter[property] = 0;
+                    });
 
-                    if(filterKeys.indexOf(planCode) > -1) {
-                        _.forEach(obj, function(plan, key) {
-                            filterObj['PS_'+planCode+'_'+key] = plan[0];
+                    console.log('Counter', counter);
+
+                    var currentAbrv = '';
+                    _.forEach(customer.FEES_SECTION[0].FEE_TRAN, function(transaction, key){
+
+                            console.log('each! FEE TRAN');
+                        _.forEach(options.fees_transactions, function(transType) {
+                            console.log('each! fees_trans');
+                            if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
+                                counter[transType]++;
+                            }
+
                         });
-                    }
-                });
-
-                _.forEach(dataPoint.PLAN_SUMMARY[0].PLAN_SUMMARY_TOTALS[0], function(obj, key) {
-                    var filterKeys = options.pst;
-                    if(filterKeys.indexOf(key) > -1) {
-                        filterObj['PST_'+key] = obj[0];
-                    }
-                });
-
-                return filterObj;
-            },
-            getFields: function(data, prefix){
-                var filterKeys = options[prefix.toLowerCase()];
-                var filterObj = {};
-
-                _.forEach(data, function(obj, key) {
-                    if(filterKeys.indexOf(key) > -1) {
-                        filterObj[prefix+'_'+key] = obj[0];
-                    }
-                });
-
-                return filterObj;
-            },
-            fees: function(data) {
-
-                var filterObj = {};
-                var topCounter = 1;
-                
-                _.forEach(data, function(obj, key) {
-                    var counterIndex = {
-                        'GCF': 1,
-                        'FANF': 1,
-                        'MALF': 1,
-                        'VIF': 1,
-                        'AMXDIS': 1,
-                        'VSMCTF': 1,
-                        'AVSTF': 1,
-                        'DISCTF': 1,
-                        'AMEXTF': 1,
-                        'NABU': 1
-                    };
-
-                    _.forEach(obj.FEE_TRAN, function(transaction, key) {
-                        var currentAbrv;
-                         _.forEach(options.fees_transactions, function(transType) {
-                                currentAbrv = convertFee(transType);
-                                if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
-                                    filterObj['FEE_'+currentAbrv+'_'+counterIndex[currentAbrv]] = transaction.TOTAL[0];
-                                    console.log(transaction.TOTAL[0]);
-                                    counterIndex[currentAbrv]++;
-                                }
-
-                            });
 
                     });
 
+                    _.forEach(maxCounter, function(quantity, key){
+                            if(quantity < counter[key]) {
+                                maxCounter[key] = counter[key];
+                            }
+                    });
                 });
 
-                _.forEach(maxCounter, function(quantity, key){
-                    for(var i = 0; i < quantity; i++) {
-                        var newIndex = i+1;
-                        // console.log( filterObj['GFC'+'_'+newIndex]);
-                        if(! filterObj['FEE_'+key+'_'+newIndex]) {
-                            filterObj['FEE_'+key+'_'+newIndex] = 0;
-                        }
-                    }
+                console.log('max counter', maxCounter);
+
+                _.forEach(jsonData, function(customer, index){
+                    var newCustomer = [];
+                    var newObj = jsonFilter.accountDetails(customer, options);
+                    _.merge(newObj, jsonFilter.planSummary(customer, options));
+                    _.merge(newObj, jsonFilter.getFields(customer.FEES_SECTION[0].FEE_TOTALS[0], 'FEES', options));
+                    _.merge(newObj, jsonFilter.getFields(customer.TOTALS_BOX_SECTION[0], 'TS', options));
+                    _.merge(newObj,  jsonFilter.fees(customer.FEES_SECTION, options));
+                    
+                    jsonData[index] = newObj;
                 });
 
-               
 
-                // console.log(filterObj);
-                    return filterObj;
+                console.log(jsonData);
 
+
+                callback();
+            },
+
+            // // ----- Convert JSON File (JSON to CSV) -----
+            function(callback){
+                console.log('JSON to CSV!');
+                var outputKeys = [];
+                _.forEach(jsonData[0], function(dataPoint, key) {
+                    outputKeys.push(key);
+                });
+
+
+                json2csv({ data: jsonData, fields: outputKeys }, function(err, csv) {
+                    if (err) console.log(err);
+                    var path = dialog.showSaveDialog({title: 'Save Dialog Example'});
+                    path = (path.indexOf('.csv') === -1) ? (path + '.csv') : path;
+                    
+                    fs.writeFile(path, csv, function(err) {
+                        if (err) throw err;
+                        respObj.files.csv.path = path;
+                        callback();
+                    });
+                });
             }
-        }
+
+        ], function() {
+            // ----- Return Response to Client -----
+            respObj.csvReady = true;
+            return respObj;
+        });
+
+
 
     }
 };
 
 
-
-
-            // // // ----- Filter JSON File -----
-            // function(callback){
-            //     console.log('Filter JSON!');
-            //     options.transactions_abr = convertFees(options.fees_transactions.slice());
-            //     console.log('option.fees_transactions ', options.fees_transactions);
-            //     console.log('option.transactions_abr ', options.transactions_abr);
-
-            //     _.forEach(jsonData, function(customer, index){
-            //         var counter = {
-            //             'GCF': 0,
-            //             'FANF': 0,
-            //             'MALF': 0,
-            //             'VIF': 0,
-            //             'AMXDIS': 0,
-            //             'VSMCTF': 0,
-            //             'AVSTF': 0,
-            //             'DISCTF': 0,
-            //             'AMEXTF': 0,
-            //             'NABU': 0
-            //         };
-
-            //         var currentAbrv = '';
-            //         _.forEach(customer.FEES_SECTION[0].FEE_TRAN, function(transaction, key){
-
-            //             _.forEach(options.fees_transactions, function(transType) {
-            //                 currentAbrv = convertFee(transType);
-            //                 if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
-            //                     counter[currentAbrv]++;
-            //                 }
-
-            //             });
-
-            //         });
-
-            //         _.forEach(maxCounter, function(quantity, key){
-            //                 if(quantity < counter[key]) {
-            //                     maxCounter[key] = counter[key];
-            //                 }
-            //         });
-            //     });
-
-            //     console.log('max counter', maxCounter);
-
-            //     _.forEach(jsonData, function(customer, index){
-            //         var newCustomer = [];
-            //         var newObj = jsonFilter.accountDetails(customer);
-            //         _.merge(newObj, jsonFilter.planSummary(customer));
-            //         _.merge(newObj, jsonFilter.getFields(customer.FEES_SECTION[0].FEE_TOTALS[0], 'FEES'));
-            //         _.merge(newObj, jsonFilter.getFields(customer.TOTALS_BOX_SECTION[0], 'TS'));
-            //         _.merge(newObj,  jsonFilter.fees(customer.FEES_SECTION));
-                    
-            //         jsonData[index] = newObj;
-            //     });
-
-
-            //     // console.log(jsonData);
-
-            //     callback();
-            // },
-
-            // // // ----- Convert JSON File (JSON to CSV) -----
-            // function(callback){
-            //     console.log('JSON to CSV!');
-            //     var outputKeys = [];
-            //     _.forEach(jsonData[0], function(dataPoint, key) {
-            //         outputKeys.push(key);
-            //     });
-
-
-            //     json2csv({ data: jsonData, fields: outputKeys }, function(err, csv) {
-            //         if (err) console.log(err);
-            //         var path = dialog.showSaveDialog({title: 'Save Dialog Example'});
-            //         path = (path.indexOf('.csv') === -1) ? (path + '.csv') : path;
-                    
-            //         fs.writeFile(path, csv, function(err) {
-            //             if (err) throw err;
-            //             respObj.files.csv.path = path;
-            //             callback();
-            //         });
-            //     });
-            // }

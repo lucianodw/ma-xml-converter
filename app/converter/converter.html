@@ -15,18 +15,6 @@
       </div>
     </div>
 
-    <div class="container ng-cloak animated bounceIn"  ng-show="load.flag">
-        <div class="row center">
-            <div class="results col-xs-12 col-sm-6 col-sm-offset-3">
-                <div class="progress progress-striped active">
-                 <div class="progress-bar progress-bar-warning"  role="progressbar" aria-valuenow="{{load.percent}}" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
-                 </div>
-               </div>
-               <p>{{load.msg}}</p>  
-            </div>
-      </div>
-    </div>
-
     <div class="container ng-cloak "  ng-show="jsonReady">
           <div class="row">
             <div class="results col-xs-12 col-sm-6 col-sm-offset-3">
@@ -39,6 +27,19 @@
             </div>
           </div>
     </div>
+
+    <div class="container ng-cloak animated bounceIn"  ng-show="load.flag">
+        <div class="row center">
+            <div class="results col-xs-12 col-sm-6 col-sm-offset-3">
+                <div class="progress progress-striped active">
+                 <div class="progress-bar progress-bar-warning"  role="progressbar" aria-valuenow="{{load.percent}}" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                 </div>
+               </div>
+               <p>{{load.msg}}</p>  
+            </div>
+      </div>
+    </div>
+
 <!--
     <div class="container ng-cloak "  ng-show="xml">
           <div class="row">
@@ -124,11 +125,21 @@
                             <label class="checkbox-inline"><input type="checkbox" name="optcheckbox" ng-model="options.fees['TOTAL_FEES_DUE']">Fees Total</label>
                         </div>
                         <hr>
-                        <div>
+                        <div class="clearfix">
                             <label for="feeType">Fee Type</label>
-                            <select class="fee-type " name="feeType">
-                                <option ng-repeat="feeType in xml.feeList" value="{{feeType}}">{{feeType}}</option>
-                            </select>
+                            <div ng-repeat="fee in options.fees['TRANSACTIONS'] track by $index" class="clearfix">
+                                <div class='col-xs-10'>
+                                    <select class="fee-type form-control" name="feeType" ng-model="options.fees['TRANSACTIONS'][$index]" >
+                                        <option ng-repeat="feeType in xml.feeList" value="{{feeType}}">{{feeType}}</option>
+                                    </select>
+                                </div>
+                                <div class="col-xs-2">
+                                    <a href ng-click="removeFee($index)" class="fee-close"><i class="fa fa-close"></i></a>
+                                </div>
+                            </div>
+                            <div class="col-xs-12">
+                                <a href ng-click="addFee()">+ Add Fee</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -143,7 +154,7 @@
                 </div>
 
                 <div class="query-cta">
-                    <a href class="btn btn-warning btn-lg" ngf-select="upload($file)">Select File & Convert</a>
+                    <a href class="btn btn-warning btn-lg" ng-click="filter()">Select File & Convert</a>
                 </div>
             </div>
           </div>
