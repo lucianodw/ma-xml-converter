@@ -11,6 +11,7 @@ angular.module('xml2JsonApp')
         console.log('upload :: Function');
         $scope.load.flag = true;
         $scope.optionsFlag = false;
+        $scope.options.fees.TRANSACTIONS = [0];
 
         var options = convert($scope.options);
 
@@ -85,6 +86,7 @@ $scope.init = function(){
             AD_AMOUNT_DEDUCTED: false
         },
         ps: {
+            AM: false,
             VS : false,
             VD : false,
             VB : false,
@@ -102,7 +104,7 @@ $scope.init = function(){
             D$ : false,
             DJ : false,
             DB : false,
-            EB : true
+            EB : false
         },
         pst: {
             PLAN_CODE : true,
