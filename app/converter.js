@@ -12,23 +12,21 @@ var  _ = require('lodash'),
 var xmlParser = new xml2js.Parser();
 const {dialog} = require('electron');
 
-var xmlObj = {
-        data: {},
-        records: 0,
-        upload: false,
-        csvReady: false,
-        fileName: '',
-        feeList: [],
-        files: {
-            csv: {
-                path: ''
+var  jsonData,
+        maxCounter = {},
+        xmlObj = {
+            data: {},
+            records: 0,
+            upload: false,
+            csvReady: false,
+            fileName: '',
+            feeList: [],
+            files: {
+                csv: {
+                    path: ''
+                }
             }
-        }
-    };
-
-var jsonData;
-
-var maxCounter = {};
+        };
 
 var jsonFilter = {
         accountDetails: function(dataPoint, options) {
@@ -84,19 +82,17 @@ var jsonFilter = {
             var topCounter = 1;
             
             _.forEach(data, function(obj, key) {
-                    var counterIndex = {};
+                var counterIndex = {};
 
-                    _.each(options.fees_transactions, function(property) {
-                        counterIndex[property] = 1;
-                    });
-                    console.log('counterIndeX: ',counterIndex);
+                _.each(options.fees_transactions, function(property) {
+                    counterIndex[property] = 1;
+                });
 
                 _.forEach(obj.FEE_TRAN, function(transaction, key) {
                      _.forEach(options.fees_transactions, function(transType) {
                             if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
                                 var transTypeFormatted = transType.replace(/ /g, '');
                                 filterObj['FEE_'+transTypeFormatted+'_'+counterIndex[transType]] = transaction.TOTAL[0];
-                                console.log(transaction.TOTAL[0]);
                                 counterIndex[transType]++;
                             }
 
@@ -128,9 +124,9 @@ module.exports = {
         return xmlObj;
     },
     init: function(file, options){
-        console.log('XML Converter Initialized');
-        console.log('file', file);
-        console.log('options', options);
+        // console.log('XML Converter Initialized');
+        // console.log('file', file);
+        // console.log('options', options);
 
         var fileName = file.name.replace('.xml', '');
         var xmlData;
@@ -139,7 +135,7 @@ module.exports = {
         async.series([
             // ----- Read XML File -----
             function(callback){
-                console.log('Read XML File!');
+                // console.log('Read XML File!');
                 fs.readFile(file.path, function (err, data) {
                     xmlData = data;
                     callback();
@@ -148,7 +144,7 @@ module.exports = {
 
             // ----- Convert XML File (XML to JSON) -----
             function(callback){
-                console.log('Convert XML File to JSON!');
+                // console.log('Convert XML File to JSON!');
                 xmlParser.parseString(xmlData, function (err, result) {
                       jsonData = result.CUSTOMERS.CUSTOMER;
                       callback();
@@ -156,72 +152,56 @@ module.exports = {
             },
 
             function(callback){
-                console.log('Get Fees Array!');
                 let feeArr = [];
 
                 _.forEach(jsonData, function(customer, index){
                     _.forEach(customer.FEES_SECTION[0].FEE_TRAN, function(transaction, key){
-                        console.log('transaction', transaction.DESCRIPTION[0]);
                         feeArr.push(transaction.DESCRIPTION[0]);
                     });
                 });    
 
-                console.log('feeArr Length', feeArr.length);
                 feeArr = _.uniq(feeArr);
                 feeArr = _.sortBy(feeArr);
                 respObj.feeList = feeArr;
+                console.log('feeList', feeArr);
                 respObj.data = jsonData;
-                console.log('feeArr Length', feeArr.length);
+
                 callback();
             }  
         ], function() {
             // ----- Return Response to Client -----
             respObj.upload = true;
-            console.log('respObj.feeList: ', respObj.feeList);
-
-            console.log('current json: ', jsonData.length);
             return respObj;
         });
     },
     filter: function(test, options) {
-        console.log('filter!');
-        console.log('test!', test);
-        console.log('options!', options);
-        console.log('old json: ', jsonData.length);
+        // console.log('test!', test);
+        // console.log('options!', options);
+
         var respObj = xmlObj;
 
         async.series([
             // // ----- Filter JSON File -----
             function(callback){
-                console.log('Filter JSON!');
-                console.log('option.fees_transactions ', options.fees_transactions);
-                console.log('option.transactions_abr ', options.transactions_abr);
-                console.log('Create Counter');
-
+                // console.log('Filter JSON!');
                 _.each(options.fees_transactions, function(property) {
                     maxCounter[property] = 0;
                 });
 
                 _.forEach(jsonData, function(customer, index){
-                    console.log('Create Counter');
                     var counter = {};
 
                     _.each(options.fees_transactions, function(property) {
                         counter[property] = 0;
                     });
 
-                    console.log('Counter', counter);
-
                     var currentAbrv = '';
                     _.forEach(customer.FEES_SECTION[0].FEE_TRAN, function(transaction, key){
 
-                            console.log('each! FEE TRAN');
                         _.forEach(options.fees_transactions, function(transType) {
-                            console.log('each! fees_trans');
                             if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
                                 counter[transType]++;
                             }
-
                         });
 
                     });
@@ -232,8 +212,6 @@ module.exports = {
                             }
                     });
                 });
-
-                console.log('max counter', maxCounter);
 
                 _.forEach(jsonData, function(customer, index){
                     var newCustomer = [];
@@ -246,16 +224,12 @@ module.exports = {
                     jsonData[index] = newObj;
                 });
 
-
-                console.log(jsonData);
-
-
                 callback();
             },
 
             // // ----- Convert JSON File (JSON to CSV) -----
             function(callback){
-                console.log('JSON to CSV!');
+                // console.log('JSON to CSV!');
                 var outputKeys = [];
                 _.forEach(jsonData[0], function(dataPoint, key) {
                     outputKeys.push(key);
