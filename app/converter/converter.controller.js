@@ -38,6 +38,38 @@ angular.module('xml2JsonApp')
         }
     }
 
+    $scope.createFeeList = function() {
+        $scope.saveFlag = true;
+    }
+
+    $scope.getAll = function() {
+        return converter.getAllSavedLists();
+    }
+
+    $scope.saveFeeList = function() {
+        converter.saveList($scope.newList, $scope.options.fees['TRANSACTIONS']);
+        $scope.saveFlag = false;
+        $scope.savedLists = $scope.getAll();
+    }
+
+    $scope.loadList = function() {
+        $scope.options.fees['TRANSACTIONS'] = [];
+
+        var list = _.filter($scope.savedLists, function(item){
+            return $scope.preloadList == item.name;
+        });
+
+        list = list[0].value;
+
+        console.log('list', list);
+
+        _.map(list, function(item, index){
+            $scope.options.fees['TRANSACTIONS'][index] = item;
+        });
+
+        console.log('list', $scope.options.fees['TRANSACTIONS']);
+    }
+
     $scope.addFee = function() {
         $scope.options.fees['TRANSACTIONS'].push($scope.xml.feeList[0]);
     }
@@ -56,9 +88,8 @@ angular.module('xml2JsonApp')
 
             var checkStatus = $interval(function() {
                 var xmlObj = converter.xmlObj();
-                console.log(xmlObj);
+
                 if(xmlObj.csvReady) {
-                    console.log('Ready to Pick Filters!');
                     $scope.csvReady = true;
                     $scope.optionsFlag = false;
                     $scope.loadReset();
@@ -73,7 +104,12 @@ angular.module('xml2JsonApp')
         $scope.options = null;
         $scope.optionsFlag = false;
         $scope.jsonReady = false;
+        $scope.newList = '';
+        $scope.saveFlag = false;
         $scope.loadReset();
+        $scope.preloadList = '';
+        $scope.savedLists = $scope.getAll();
+        console.log($scope.savedLists);
         $scope.options = {
             ad: {
                 MAILING_NAME: true,

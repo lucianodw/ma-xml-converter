@@ -7,10 +7,12 @@ var  _ = require('lodash'),
         xml2js = require('xml2js'),
         json2csv = require('json2csv'),
         jsonfile = require('jsonfile'),
-        util = require('util');
+        util = require('util'),
+        Config = require('electron-config');
 
 var xmlParser = new xml2js.Parser();
 const {dialog} = require('electron');
+const config = new Config();
 
 var  jsonData,
         maxCounter = {},
@@ -257,7 +259,22 @@ module.exports = {
 
 
 
+    },
+    saveList: function(name, list) {
+        config.set(name, list);
+    },
+    getAllSavedLists: function() {
+            var arr = [];
+
+            _.map(config.store, function(item, key) {
+                    var obj = {};
+
+                    obj.name = key;
+                    obj.value = item;
+
+                    arr.push(obj);
+            });
+
+            return arr;
     }
 };
-
-
