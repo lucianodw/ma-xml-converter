@@ -82,7 +82,7 @@ var jsonFilter = {
 
             var filterObj = {};
             var topCounter = 1;
-            
+
             _.forEach(data, function(obj, key) {
                 var counterIndex = {};
 
@@ -141,7 +141,7 @@ module.exports = {
                 fs.readFile(file.path, function (err, data) {
                     xmlData = data;
                     callback();
-                });         
+                });
             },
 
             // ----- Convert XML File (XML to JSON) -----
@@ -160,32 +160,30 @@ module.exports = {
                     _.forEach(customer.FEES_SECTION[0].FEE_TRAN, function(transaction, key){
                         feeArr.push(transaction.DESCRIPTION[0]);
                     });
-                });    
+                });
 
                 feeArr = _.uniq(feeArr);
                 feeArr = _.sortBy(feeArr);
                 respObj.feeList = feeArr;
-                console.log('feeList', feeArr);
                 respObj.data = jsonData;
 
                 callback();
-            }  
+            }
         ], function() {
             // ----- Return Response to Client -----
             respObj.upload = true;
             return respObj;
         });
     },
-    filter: function(test, options) {
-        // console.log('test!', test);
-        // console.log('options!', options);
+    filter: function(options) {
+        console.log('options!', options);
 
         var respObj = xmlObj;
 
         async.series([
             // // ----- Filter JSON File -----
             function(callback){
-                // console.log('Filter JSON!');
+                console.log('Filter JSON!');
                 _.each(options.fees_transactions, function(property) {
                     maxCounter[property] = 0;
                 });
@@ -199,7 +197,6 @@ module.exports = {
 
                     var currentAbrv = '';
                     _.forEach(customer.FEES_SECTION[0].FEE_TRAN, function(transaction, key){
-
                         _.forEach(options.fees_transactions, function(transType) {
                             if(transaction.DESCRIPTION[0].indexOf(transType) > -1) {
                                 counter[transType]++;
@@ -207,22 +204,36 @@ module.exports = {
                         });
 
                     });
-
+                    console.log('filter fees section done.');
                     _.forEach(maxCounter, function(quantity, key){
                             if(quantity < counter[key]) {
                                 maxCounter[key] = counter[key];
+                                console.log(maxCounter[key]);
                             }
                     });
                 });
 
+                console.log('Go through JSON data');
+
                 _.forEach(jsonData, function(customer, index){
+                    console.log('Customer', customer);
                     var newCustomer = [];
                     var newObj = jsonFilter.accountDetails(customer, options);
+                        console.log('accountDetails');
                     _.merge(newObj, jsonFilter.planSummary(customer, options));
-                    _.merge(newObj, jsonFilter.getFields(customer.FEES_SECTION[0].FEE_TOTALS[0], 'FEES', options));
+                        console.log('planSummary');
+
+                            console.log('checking fee section');
+                    if(customer.FEES_SECTION[0]){
+                        console.log('FEES_SECTION');
+                      _.merge(newObj, jsonFilter.getFields(customer.FEES_SECTION[0].FEE_TOTALS[0], 'FEES', options));
+                    }
+                        console.log('getFields');
                     _.merge(newObj, jsonFilter.getFields(customer.TOTALS_BOX_SECTION[0], 'TS', options));
+                        console.log('getFields');
                     _.merge(newObj,  jsonFilter.fees(customer.FEES_SECTION, options));
-                    
+                        console.log('fees');
+
                     jsonData[index] = newObj;
                 });
 
@@ -231,7 +242,7 @@ module.exports = {
 
             // // ----- Convert JSON File (JSON to CSV) -----
             function(callback){
-                // console.log('JSON to CSV!');
+                console.log('JSON to CSV!');
                 var outputKeys = [];
                 _.forEach(jsonData[0], function(dataPoint, key) {
                     outputKeys.push(key);
@@ -241,8 +252,9 @@ module.exports = {
                 json2csv({ data: jsonData, fields: outputKeys }, function(err, csv) {
                     if (err) console.log(err);
                     var path = dialog.showSaveDialog({title: 'Save Dialog Example'});
+                      console.log('path', path);
                     path = (path.indexOf('.csv') === -1) ? (path + '.csv') : path;
-                    
+
                     fs.writeFile(path, csv, function(err) {
                         if (err) throw err;
                         respObj.files.csv.path = path;

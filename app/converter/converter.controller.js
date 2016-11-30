@@ -79,17 +79,22 @@ angular.module('xml2JsonApp')
     }
 
     $scope.filter = function() {
+            console.log('---- Filter ----');
             $scope.load.flag = true;
             $scope.optionsFlag = false;
             $scope.load.msg = 'Creating CSV File...';
 
             var options = convert($scope.options);
-            converter.filter('test', options);
+            console.log('options', options);
+            converter.filter(options);
+            console.log('after filter');
 
             var checkStatus = $interval(function() {
                 var xmlObj = converter.xmlObj();
 
+                console.log('checking...');
                 if(xmlObj.csvReady) {
+                                console.log('csv ready!');
                     $scope.csvReady = true;
                     $scope.optionsFlag = false;
                     $scope.loadReset();
@@ -185,4 +190,3 @@ var convert = function(options) {
 
     return optionObj;
 }
-
